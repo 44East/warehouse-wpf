@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Accessibility;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Warehouse.ViewModel;
 
 namespace Warehouse
 {
@@ -20,9 +9,12 @@ namespace Warehouse
     /// </summary>
     public partial class MainWindow : Window
     {
+        private ProductsViewModel _viewModel;
         public MainWindow()
         {
             InitializeComponent();
+            _viewModel = new ProductsViewModel();
+            DataContext = _viewModel;
         }
     }
 }

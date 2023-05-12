@@ -1,6 +1,4 @@
-﻿
-
-namespace Warehouse.Model.Models
+﻿namespace Warehouse.Model.Models
 {
     public class Product
     {

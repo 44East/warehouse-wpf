@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Warehouse.Model.DataOperations
+﻿namespace Warehouse.Model.DataOperations
 {
     internal static class SQLQueries
     {
@@ -87,15 +81,15 @@ namespace Warehouse.Model.DataOperations
                                                              WHERE name = 'Warehouse';";
         public static string FillingStates { get; } = @"USE [Warehouse]
                                                         INSERT INTO dbo.States (Name) VALUES                                                                
-                                                               ('Принят'),
-                                                               ('На складе'),
-                                                               ('Продан');";
+                                                               (N'Принят'),
+                                                               (N'На складе'),
+                                                               (N'Продан');";
         public static string FillingProducts { get; } = @"USE [Warehouse]
                                                           INSERT INTO dbo.Products (Name, SKU, StateID) VALUES
-                                                                ('Товар 1', '123333' 1),
-                                                                ('Товар 2', '433333', 2),
-                                                                ('Товар 3', '3444455', 2),
-                                                                ('Товар 4', '433333', 3);";
+                                                                (N'Товар 1', N'123333' 1),
+                                                                (N'Товар 2', N'433333', 2),
+                                                                (N'Товар 3', N'3444455', 2),
+                                                                (N'Товар 4', N'433333', 3);";
         public static string SelectMovements { get; } = @"USE [Warehouse]
                                                           SELECT M.ID, M.DateStamp, P.ID AS ProductId, P.Name AS ProductName, P.SKU, S.ID AS StateId, S.Name AS StateName
                                                           FROM dbo.Movements M
@@ -110,5 +104,10 @@ namespace Warehouse.Model.DataOperations
                                                        ID,
                                                        Name
                                                        FROM dbo.States";
+        public static string InsertProduct { get; } = @"USE [Warehouse]
+                                                        INSERT INTO dbo.Products (Name, SKU, StateID) VALUES
+                                                        (N'{0}', N'{1}, {2})";
+        public static string UpdateProductState { get; } = @"USE [Artsofte.Data]
+                                                             UPDATE dbo.Employees SET StateId = {0} WHERE Id = {1}";
     }
 }

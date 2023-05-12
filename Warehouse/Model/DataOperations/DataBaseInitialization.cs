@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SqlClient;
-using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using Warehouse.Model.Models;
@@ -275,6 +274,82 @@ namespace Warehouse.Model.DataOperations
             }
 
 
+        }
+
+        public void InsertProduct(Product product)
+        {
+            OpenConnection();
+            if (_sqlConnection == null)
+                return;
+            var sql = string.Format(SQLQueries.InsertProduct, product.Name, product.SKU, product.State.Id);
+            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
+            {
+                //If there are problems during a transaction, all changes will be rolled back.
+                SqlTransaction transaction = null;
+                try
+                {
+                    transaction = _sqlConnection.BeginTransaction();
+                    command.Transaction = transaction;
+                    command.CommandType = CommandType.Text;
+                    command.ExecuteNonQuery();
+                }
+                catch (SqlException ex)
+                {
+                    try
+                    {
+                        //Try to roll back all changes
+                        transaction?.Rollback();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        throw;
+                    }
+                }
+                finally
+                {
+                    //If the transaction is successful, all changes will be committed to the database.
+                    transaction?.Commit();
+                }
+            }
+            CloseConnection();
+        }
+
+        public void UpdateProduct(Product product)
+        {
+            OpenConnection();
+            if (_sqlConnection == null)
+                return;
+            var sql = string.Format(SQLQueries.UpdateProductState, product.State.Id, product.Id);
+            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
+            {
+                //If there are problems during a transaction, all changes will be rolled back.
+                SqlTransaction transaction = null;
+                try
+                {
+                    transaction = _sqlConnection.BeginTransaction();
+                    command.Transaction = transaction;
+                    command.CommandType = CommandType.Text;
+                    command.ExecuteNonQuery();
+                }
+                catch (SqlException ex)
+                {
+                    try
+                    {
+                        //Try to roll back all changes
+                        transaction?.Rollback();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        throw;
+                    }
+                }
+                finally
+                {
+                    //If the transaction is successful, all changes will be committed to the database.
+                    transaction?.Commit();
+                }
+            }
+            CloseConnection();
         }
     }
 }
