@@ -9,12 +9,31 @@ namespace Warehouse
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ProductsViewModel _viewModel;
+        private ProductsViewModel _productsViewModel;
         public MainWindow()
         {
             InitializeComponent();
-            _viewModel = new ProductsViewModel();
-            DataContext = _viewModel;
+            _productsViewModel = new ProductsViewModel();
+            DataContext = _productsViewModel;
+        }
+
+        private void ButtonReception_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void ButtonWarehouse_Click(object sender, RoutedEventArgs e)
+        {
+            
+        }
+        private void ButtonSold_Click(object sender, RoutedEventArgs e) 
+        { 
+        
+        }
+        
+        private void ButtonReport_Click(object sender, RoutedEventArgs e)
+        {
+            ReportWindow reportWindow = new ReportWindow();
+            reportWindow.Show();
         }
     }
 }

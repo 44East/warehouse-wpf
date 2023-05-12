@@ -3,17 +3,17 @@
     internal static class SQLQueries
     {
         public static string WarehoueseDBCreation { get; } = @"USE [master]
-                                                                    CREATE DATABASE [Warehouse]
-                                                                    ALTER DATABASE [Warehouse] SET READ_COMMITTED_SNAPSHOT ON";
+                                                                    CREATE DATABASE [Warehouse]";
         public static string StatesTableStructure { get; } = @"USE [Warehouse]
                                                                     CREATE TABLE dbo.States (
-                                                                        ID INT PRIMARY KEY IDENTITY (1,1) NOT NULL,
-                                                                        Name NVARCHAR(30) NOT NULL
+                                                                        ID INT IDENTITY (1,1) NOT NULL,
+                                                                        Name NVARCHAR(30) NOT NULL,
+                                                                        CONSTRAINT PK_States PRIMARY KEY (ID)
                                                                         );";
     
         public static string ProductsTableStructure { get; } = @"USE [Warehouse]
                                                                       CREATE TABLE dbo.Products (
-                                                                        ID INT PRIMARY KEY IDENTITY (1,1) NOT NULL,
+                                                                        ID INT IDENTITY (1,1) NOT NULL,
                                                                         Name NVARCHAR(30) NOT NULL,
                                                                         SKU NVARCHAR(30) NOT NULL,
                                                                         StateID INT NOT NULL,
@@ -22,16 +22,32 @@
                                                                         );";
         public static string MovementsTableStructure { get; } = @"USE [Warehouse]
                                                                        CREATE TABLE dbo.Movements (
-                                                                            ID INT PRIMARY KEY IDENTITY (1,1) NOT NULL,
+                                                                            ID INT IDENTITY (1,1) NOT NULL,
                                                                             ProductID INT NOT NULL,
                                                                             StateID INT NOT NULL,
-                                                                            DateStamp DATE NOT NULL,
+                                                                            DateStamp DATETIME NOT NULL,
                                                                             CONSTRAINT PK_Movements PRIMARY KEY (ID),
                                                                             CONSTRAINT FK_Movements_Products FOREIGN KEY (ProductID) REFERENCES dbo.Products (ID),
-                                                                            CONSTRAINT FK_Movements_States FOREIGN KEY (StateID) REFERENCES dbo.Statuses (ID)
+                                                                            CONSTRAINT FK_Movements_States FOREIGN KEY (StateID) REFERENCES dbo.States (ID)
                                                                         );";
-        public static string UpdatingMovementsProcedure { get; } = @"USE [Warehouse]
-                                                                    CREATE PROCEDURE dbo.UpdateMovements
+        public static string InsertProductProcedure { get; } = @"CREATE PROCEDURE dbo.InsertProductWithMovement
+                                                                        @Name NVARCHAR(50),
+                                                                        @SKU NVARCHAR(20),
+                                                                        @StateID INT
+                                                                    AS
+                                                                    BEGIN
+                                                                        SET NOCOUNT ON;
+
+                                                                        INSERT INTO Products (Name, SKU, StateID)
+                                                                        VALUES (@Name, @SKU, @StateID);
+
+                                                                        DECLARE @ProductID INT;
+                                                                        SET @ProductID = SCOPE_IDENTITY();
+
+                                                                        INSERT INTO Movements (ProductID, StateID, DateStamp)
+                                                                        VALUES (@ProductID, @StateID, GETDATE());
+                                                                    END";
+        public static string UpdatingMovementsProcedure { get; } = @"CREATE PROCEDURE dbo.UpdateMovements
                                                                         @ProductID INT,
                                                                         @StateID INT
                                                                     AS
@@ -48,8 +64,7 @@
                                                                             VALUES (@ProductID, @StateID, GETDATE())
                                                                         END
                                                                     END";
-        public static string UpdatingProductTrigger { get; } =      @"USE [Warehouse]
-                                                                    CREATE TRIGGER dbo.Trigger_UpdateMovementsOnStateChange
+        public static string UpdatingProductTrigger { get; } =      @"CREATE TRIGGER dbo.Trigger_UpdateMovementsOnStateChange
                                                                     ON dbo.Products
                                                                     AFTER UPDATE
                                                                     AS
@@ -63,20 +78,18 @@
                                                                             EXEC dbo.UpdateMovements @ProductID, @StateID;
                                                                         END
                                                                     END";
-        public static string CreatingProductTrigger { get; } = @"USE [Warehouse]
-                                                                    CREATE TRIGGER dbo.Trigger_UpdateMovementsOnProductInsert
-                                                                    ON dbo.Products
+        public static string CreatingProductTrigger { get; } = @"CREATE TRIGGER Trigger_UpdateMovementsOnProductInsert
+                                                                    ON Products
                                                                     AFTER INSERT
                                                                     AS
                                                                     BEGIN
                                                                         DECLARE @ProductID INT, @StateID INT;
-        
-                                                                        SELECT @ProductID = ID, @StateID = StateID FROM inserted;
 
-                                                                        EXEC dbo.UpdateMovements @ProductID, @StateID;
+                                                                        SELECT @ProductID = Id, @StateID = StateID FROM inserted;
+
+                                                                        EXEC UpdateMovements @ProductID, @StateID;
                                                                     END";
-        public static string CheckDBForExisting { get; } = @"USE [Warehouse]
-                                                             SELECT name
+        public static string CheckDBForExisting { get; } = @"SELECT name
                                                              FROM sys.databases
                                                              WHERE name = 'Warehouse';";
         public static string FillingStates { get; } = @"USE [Warehouse]
@@ -86,7 +99,7 @@
                                                                (N'Продан');";
         public static string FillingProducts { get; } = @"USE [Warehouse]
                                                           INSERT INTO dbo.Products (Name, SKU, StateID) VALUES
-                                                                (N'Товар 1', N'123333' 1),
+                                                                (N'Товар 1', N'123333', 1),
                                                                 (N'Товар 2', N'433333', 2),
                                                                 (N'Товар 3', N'3444455', 2),
                                                                 (N'Товар 4', N'433333', 3);";
@@ -109,5 +122,10 @@
                                                         (N'{0}', N'{1}, {2})";
         public static string UpdateProductState { get; } = @"USE [Artsofte.Data]
                                                              UPDATE dbo.Employees SET StateId = {0} WHERE Id = {1}";
+        public static string SelectProdyctByState { get; } = @"USE [Warehouse]
+                                                             SELECT P.ID, P.Name, P.SKU, S.ID AS StateId, S.Name AS StateName
+                                                             FROM dbo.Products P
+                                                             INNER JOIN dbo.States S ON P.StateId = S.ID
+														     WHERE S.Name = N'{0}';";
     }
 }

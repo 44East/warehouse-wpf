@@ -6,10 +6,10 @@ using Warehouse.Model.Models;
 
 namespace Warehouse.ViewModel
 {
-    internal class ProductsViewModel : INotifyPropertyChanged
+    public class ProductsViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<Product> _products;
-        private ObservableCollection<Movements> _movements;
+        private ObservableCollection<Product> _productsByState;
         private readonly ProductsDataAccessLayer _dal;
 
         public ObservableCollection<State> States { get; init; }
@@ -22,13 +22,14 @@ namespace Warehouse.ViewModel
                 OnPropertyChanged("Products");
             }
         }
-        public ObservableCollection<Movements> Movements
+
+        public ObservableCollection<Product> ProductsByState
         {
-            get => _movements ?? (_movements = new ObservableCollection<Movements>());
+            get => _productsByState ?? (_productsByState = new ObservableCollection<Product>());
             set
             {
-                _movements = value;
-                OnPropertyChanged("Movements");
+                _productsByState = value;
+                OnPropertyChanged("ProductsByState");
             }
         }
         public ProductsViewModel()
@@ -36,15 +37,13 @@ namespace Warehouse.ViewModel
             _dal = new ProductsDataAccessLayer();
             Products = _dal.GetAllProducts();
             States = _dal.GetAllStates();
-            Movements = _dal.GetAllMovements();
         }
 
         public void InsertProduct(Product product)
         {
             _dal.InsertProduct(product);
             //Refresh the props data after inserting from the database
-            Products = _dal.GetAllProducts();            
-            Movements = _dal.GetAllMovements();
+            Products = _dal.GetAllProducts();
         }
 
         public void UpdateProduct(Product product)
@@ -52,9 +51,12 @@ namespace Warehouse.ViewModel
             _dal.UpdateProduct(product);
             //Refresh the props data after inserting from the database
             Products = _dal.GetAllProducts();
-            Movements = _dal.GetAllMovements();
         }
 
+        public void GetProductsByState(string state)
+        {
+            ProductsByState = _dal.GetProductsByState(state);
+        }
 
 
         /// <summary>

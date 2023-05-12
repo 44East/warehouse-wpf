@@ -24,12 +24,12 @@ namespace Warehouse.Model.DataOperations
 
         private void OpenConnection()
         {
+            _sqlConnection = new SqlConnection()
+            {
+                ConnectionString = _connectionString
+            };
             if (_sqlConnection.State != ConnectionState.Open)
             {
-                _sqlConnection = new SqlConnection()
-                {
-                    ConnectionString = _connectionString
-                };
                 _sqlConnection.Open();
             }
         }
@@ -56,7 +56,7 @@ namespace Warehouse.Model.DataOperations
         #region Checking and Creation DB
         private bool IsTheLocalDBExists()
         {
-            OpenConnection();           
+            OpenConnection();
             var sql = SQLQueries.CheckDBForExisting;
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
@@ -82,7 +82,7 @@ namespace Warehouse.Model.DataOperations
             }
             else
             {
-                
+
                 try
                 {
                     CreationDB();
@@ -98,49 +98,53 @@ namespace Warehouse.Model.DataOperations
 
         private void CreationDB()
         {
-            var queriesStack = new Stack<string>();
-            //Pushing the SQL scripts in a specified sequence
-            queriesStack.Push(SQLQueries.CreatingProductTrigger);
-            queriesStack.Push(SQLQueries.UpdatingProductTrigger);
-            queriesStack.Push(SQLQueries.UpdatingMovementsProcedure);
-            queriesStack.Push(SQLQueries.MovementsTableStructure);
-            queriesStack.Push(SQLQueries.ProductsTableStructure);
-            queriesStack.Push(SQLQueries.StatesTableStructure);
-            queriesStack.Push(SQLQueries.WarehoueseDBCreation);
-
             OpenConnection();
-            do
+
+            // Execute the CREATE DATABASE statement separately
+            using (SqlCommand createDBCommand = new SqlCommand(SQLQueries.WarehoueseDBCreation, _sqlConnection))
             {
-                using (SqlCommand command = new SqlCommand(queriesStack.Pop(), _sqlConnection))
+                createDBCommand.CommandType = CommandType.Text;
+                createDBCommand.ExecuteNonQuery();
+            }
+
+            // Execute the remaining SQL commands in a transaction
+            using (SqlTransaction structureTransaction = _sqlConnection.BeginTransaction())
+            {
+                try
                 {
-                    //If there are problems during a transaction, all changes will be rolled back.
-                    SqlTransaction transaction = null;
-                    try
+                    var queriesStack = new Stack<string>();
+                    queriesStack.Push(SQLQueries.CreatingProductTrigger);
+                    queriesStack.Push(SQLQueries.UpdatingProductTrigger);
+                    //queriesStack.Push(SQLQueries.InsertProductProcedure);
+                    queriesStack.Push(SQLQueries.UpdatingMovementsProcedure);
+                    queriesStack.Push(SQLQueries.MovementsTableStructure);
+                    queriesStack.Push(SQLQueries.ProductsTableStructure);
+                    queriesStack.Push(SQLQueries.StatesTableStructure);
+
+                    while (queriesStack.Count > 0)
                     {
-                        transaction = _sqlConnection.BeginTransaction();
-                        command.Transaction = transaction;
-                        command.CommandType = CommandType.Text;
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {                        
-                        try
+                        string query = queriesStack.Pop();
+                        using (SqlCommand command = new SqlCommand(query, _sqlConnection))
                         {
-                            //Try to roll back all changes
-                            transaction?.Rollback();
-                        }
-                        catch (TransactionException ex2)
-                        {
-                            throw;
+                            command.Transaction = structureTransaction;
+                            command.CommandType = CommandType.Text;
+                            command.ExecuteNonQuery();
                         }
                     }
-                    finally
-                    {
-                        //If the transaction is successful, all changes will be committed to the database.
-                        transaction.Commit();
-                    }
+
+                    structureTransaction.Commit();
                 }
-            } while (queriesStack.Count > 0);
+                catch (SqlException ex)
+                {
+                    // Handle the exception or rethrow it
+                    structureTransaction.Rollback();
+                    throw;
+                }
+
+
+            }
+            
+
             CloseConnection();
         }
 
@@ -197,24 +201,25 @@ namespace Warehouse.Model.DataOperations
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                SqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    listMovements.Add(new Movements
+                    while (reader.Read())
                     {
-                        ID = (int)reader["ID"],
-                        DateStamp = (DateTime)reader["DateStamp"],
-                        Product = new Product
+                        listMovements.Add(new Movements
                         {
-                            Id = (int)reader["ProductId"],
-                            Name = (string)reader["ProductName"],
-                            SKU = (string)reader["SKU"],
-                            State = new State { Id = (int)reader["StateId"], Name = (string)reader["StateName"] }
-                        },
-                        State = new State { Id = (int)reader["StateId"], Name = (string)reader["StateName"] }
+                            ID = (int)reader["ID"],
+                            DateStamp = (DateTime)reader["DateStamp"],
+                            Product = new Product
+                            {
+                                Id = (int)reader["ProductId"],
+                                Name = (string)reader["ProductName"],
+                                SKU = (string)reader["SKU"],
+                                State = new State { Id = (int)reader["StateId"], Name = ((string)reader["StateName"]).Trim() }
+                            },
+                            State = new State { Id = (int)reader["StateId"], Name = ((string)reader["StateName"]).Trim() }
 
-                    });
-                    reader.Close();
+                        }) ;
+                    }
                 }
 
                 CloseConnection();
@@ -228,22 +233,55 @@ namespace Warehouse.Model.DataOperations
         {
             OpenConnection();
             var products = new ObservableCollection<Product>();
-            var sql = SQLQueries.SelectMovements;
+            var sql = SQLQueries.SelectProducts;
 
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                SqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    products.Add(new Product
+                    while (reader.Read())
+                    {
+                        products.Add(new Product
                         {
-                            Id = (int)reader["ProductId"],
-                            Name = (string)reader["ProductName"],
+                            Id = (int)reader["ID"],
+                            Name = (string)reader["Name"],
                             SKU = (string)reader["SKU"],
-                            State = new State { Id = (int)reader["StateId"], Name = (string)reader["StateName"] }
+                            State = new State { Id = (int)reader["StateId"], Name = ((string)reader["StateName"]).Trim() }
                         });
-                    reader.Close();
+
+                    }
+                }
+
+                CloseConnection();
+                return products;
+            }
+
+
+        }
+
+        public ObservableCollection<Product> GetProductsByState(string state)
+        {
+            OpenConnection();
+            var products = new ObservableCollection<Product>();
+            var sql = string.Format(SQLQueries.SelectProdyctByState, state);
+
+            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
+            {
+                command.CommandType = CommandType.Text;
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        products.Add(new Product
+                        {
+                            Id = (int)reader["ID"],
+                            Name = (string)reader["Name"],
+                            SKU = (string)reader["SKU"],
+                            State = new State { Id = (int)reader["StateId"], Name = ((string)reader["StateName"]).Trim() }
+                        });
+
+                    }
                 }
 
                 CloseConnection();
@@ -262,11 +300,12 @@ namespace Warehouse.Model.DataOperations
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                SqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    states.Add(new State { Id = (int)reader["ID"], Name = (string)reader["Name"] });
-                    reader.Close();
+                    while (reader.Read())
+                    {
+                        states.Add(new State { Id = (int)reader["ID"], Name = ((string)reader["Name"]).Trim() });
+                    }
                 }
 
                 CloseConnection();
