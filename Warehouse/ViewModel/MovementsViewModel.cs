@@ -65,7 +65,7 @@ namespace Warehouse.ViewModel
             get => _selectedFromDate;
             set
             {
-                _selectedFromDate = value;
+                _selectedFromDate = value.Value.AddHours(23).AddMinutes(59).AddSeconds(59);
                 OnPropertyChanged();
             }
         }
@@ -75,7 +75,7 @@ namespace Warehouse.ViewModel
             get => _selectedToDate;
             set
             {
-                _selectedToDate = value;
+                _selectedToDate = value.Value.AddHours(23).AddMinutes(59).AddSeconds(59);
                 OnPropertyChanged();
             }
         }
@@ -90,19 +90,13 @@ namespace Warehouse.ViewModel
 
             ApplyFiltersCommand = new RelayCommand(ApplyFilters);
 
-            InitializeStatusList();
+            InitializeStatesList();
         }
 
-        private void InitializeStatusList()
+        private void InitializeStatesList()
         {
-            States = new ObservableCollection<string>
-            {
-                "Все",
-                "Принят",
-                "На складе",
-                "Продан"
-            };
-            SelectedState = "Все";
+            States = ProductStates.States;
+            SelectedState = ProductStates.AllProducts;
         }
 
         private void ApplyFilters()
@@ -122,7 +116,7 @@ namespace Warehouse.ViewModel
 
             IEnumerable<Movements> filteredMovements;
 
-            if (state.Equals("Все"))
+            if (state.Equals(ProductStates.AllProducts))
             {
                 filteredMovements = Movements.Where(m => m.DateStamp > fromDate && m.DateStamp < toDate).OrderBy(m => m.Product.Id);
             }

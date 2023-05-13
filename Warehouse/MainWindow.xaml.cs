@@ -19,15 +19,18 @@ namespace Warehouse
 
         private void ButtonReception_Click(object sender, RoutedEventArgs e)
         {
-
+            ReceiptionWindow receiptionWindow = new ReceiptionWindow(_productsViewModel);
+            receiptionWindow.Show();
         }
         private void ButtonWarehouse_Click(object sender, RoutedEventArgs e)
         {
-            
+            OnWarehouseWindow warehouseWindow = new OnWarehouseWindow(_productsViewModel);
+            warehouseWindow.Show();
         }
         private void ButtonSold_Click(object sender, RoutedEventArgs e) 
         { 
-        
+            SoldProductsWindow soldProducts = new SoldProductsWindow(_productsViewModel);
+            soldProducts.Show();
         }
         
         private void ButtonReport_Click(object sender, RoutedEventArgs e)

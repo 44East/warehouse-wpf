@@ -115,7 +115,7 @@ namespace Warehouse.Model.DataOperations
                     var queriesStack = new Stack<string>();
                     queriesStack.Push(SQLQueries.CreatingProductTrigger);
                     queriesStack.Push(SQLQueries.UpdatingProductTrigger);
-                    //queriesStack.Push(SQLQueries.InsertProductProcedure);
+                    queriesStack.Push(SQLQueries.AddMovementAfterUpdateProcedure);
                     queriesStack.Push(SQLQueries.UpdatingMovementsProcedure);
                     queriesStack.Push(SQLQueries.MovementsTableStructure);
                     queriesStack.Push(SQLQueries.ProductsTableStructure);

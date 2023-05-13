@@ -6,7 +6,7 @@
                                                                     CREATE DATABASE [Warehouse]";
         public static string StatesTableStructure { get; } = @"USE [Warehouse]
                                                                     CREATE TABLE dbo.States (
-                                                                        ID INT IDENTITY (1,1) NOT NULL,
+                                                                        ID INT NOT NULL,
                                                                         Name NVARCHAR(30) NOT NULL,
                                                                         CONSTRAINT PK_States PRIMARY KEY (ID)
                                                                         );";
@@ -64,7 +64,18 @@
                                                                             VALUES (@ProductID, @StateID, GETDATE())
                                                                         END
                                                                     END";
-        public static string UpdatingProductTrigger { get; } =      @"CREATE TRIGGER dbo.Trigger_UpdateMovementsOnStateChange
+        public static string AddMovementAfterUpdateProcedure { get; } = @"CREATE PROCEDURE dbo.InsertMovementsOnStateChange
+                                                                    @ProductID INT,
+                                                                    @StateID INT
+                                                                AS
+                                                                BEGIN
+                                                                    IF EXISTS (SELECT 1 FROM dbo.Products WHERE ID = @ProductID)
+                                                                    BEGIN
+                                                                        INSERT INTO dbo.Movements (ProductID, StateID, DateStamp)
+                                                                        VALUES (@ProductID, @StateID, GETDATE())
+                                                                    END
+                                                                END";
+        public static string UpdatingProductTrigger { get; } = @"CREATE TRIGGER dbo.Trigger_UpdateMovementsOnStateChange
                                                                     ON dbo.Products
                                                                     AFTER UPDATE
                                                                     AS
@@ -75,7 +86,7 @@
         
                                                                             SELECT @ProductID = ID, @StateID = StateID FROM inserted;
 
-                                                                            EXEC dbo.UpdateMovements @ProductID, @StateID;
+                                                                            EXEC dbo.InsertMovementsOnStateChange @ProductID, @StateID;
                                                                         END
                                                                     END";
         public static string CreatingProductTrigger { get; } = @"CREATE TRIGGER Trigger_UpdateMovementsOnProductInsert
@@ -87,16 +98,16 @@
 
                                                                         SELECT @ProductID = Id, @StateID = StateID FROM inserted;
 
-                                                                        EXEC UpdateMovements @ProductID, @StateID;
+                                                                        EXEC dbo.UpdateMovements @ProductID, @StateID;
                                                                     END";
         public static string CheckDBForExisting { get; } = @"SELECT name
                                                              FROM sys.databases
                                                              WHERE name = 'Warehouse';";
         public static string FillingStates { get; } = @"USE [Warehouse]
-                                                        INSERT INTO dbo.States (Name) VALUES                                                                
-                                                               (N'Принят'),
-                                                               (N'На складе'),
-                                                               (N'Продан');";
+                                                        INSERT INTO dbo.States (ID, Name) VALUES                                                                
+                                                               (1, N'Принят'),
+                                                               (2, N'На складе'),
+                                                               (3, N'Продан');";
         public static string FillingProducts { get; } = @"USE [Warehouse]
                                                           INSERT INTO dbo.Products (Name, SKU, StateID) VALUES
                                                                 (N'Товар 1', N'123333', 1),
@@ -119,9 +130,9 @@
                                                        FROM dbo.States";
         public static string InsertProduct { get; } = @"USE [Warehouse]
                                                         INSERT INTO dbo.Products (Name, SKU, StateID) VALUES
-                                                        (N'{0}', N'{1}, {2})";
-        public static string UpdateProductState { get; } = @"USE [Artsofte.Data]
-                                                             UPDATE dbo.Employees SET StateId = {0} WHERE Id = {1}";
+                                                        (N'{0}', N'{1}', {2})";
+        public static string UpdateProductState { get; } = @"USE [Warehouse]
+                                                             UPDATE dbo.Products SET StateId = {0} WHERE ID = {1}";
         public static string SelectProdyctByState { get; } = @"USE [Warehouse]
                                                              SELECT P.ID, P.Name, P.SKU, S.ID AS StateId, S.Name AS StateName
                                                              FROM dbo.Products P

@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using Warehouse.Model.DataOperations;
 using Warehouse.Model.Models;
 
@@ -10,16 +12,27 @@ namespace Warehouse.ViewModel
     {
         private ObservableCollection<Product> _products;
         private ObservableCollection<Product> _productsByState;
+        private Product _selectedProduct;
         private readonly ProductsDataAccessLayer _dal;
-
         public ObservableCollection<State> States { get; init; }
+
+        public Product SelectedProduct
+        {
+            get => _selectedProduct;
+            set
+            {
+                _selectedProduct = value;
+                OnPropertyChanged(nameof(SelectedProduct));
+            }
+        }
+
         public ObservableCollection<Product> Products
         {
             get => _products ?? (_products = new ObservableCollection<Product>());
             set
             {
                 _products = value;
-                OnPropertyChanged("Products");
+                OnPropertyChanged(nameof(Products));
             }
         }
 
@@ -29,7 +42,7 @@ namespace Warehouse.ViewModel
             set
             {
                 _productsByState = value;
-                OnPropertyChanged("ProductsByState");
+                OnPropertyChanged(nameof(ProductsByState));
             }
         }
         public ProductsViewModel()
@@ -41,16 +54,26 @@ namespace Warehouse.ViewModel
 
         public void InsertProduct(Product product)
         {
-            _dal.InsertProduct(product);
-            //Refresh the props data after inserting from the database
-            Products = _dal.GetAllProducts();
+            if (product != null)
+            {
+                product.State = States.Where(s => s.Name.Equals(ProductStates.OnReceiption)).FirstOrDefault() ?? new State { Name = ProductStates.OnReceiption, Id = ProductStates.States.IndexOf(ProductStates.OnReceiption) };
+                _dal.InsertProduct(product);
+                //Refresh the props data after inserting from the database
+                Products = _dal.GetAllProducts();
+            }
+            return;
         }
 
-        public void UpdateProduct(Product product)
+        public void UpdateProduct(Product product, string nextState)
         {
-            _dal.UpdateProduct(product);
-            //Refresh the props data after inserting from the database
-            Products = _dal.GetAllProducts();
+            if (States.Where(s => s.Name == nextState).Any())
+            {
+                product.State = States.Where(s => s.Name == nextState).Select(s => s).FirstOrDefault();
+                _dal.UpdateProduct(product);
+                //Refresh the props data after inserting from the database
+                Products = _dal.GetAllProducts();
+            }
+            return;
         }
 
         public void GetProductsByState(string state)
