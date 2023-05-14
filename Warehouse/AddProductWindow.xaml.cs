@@ -1,34 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using Warehouse.Model.Models;
 using Warehouse.ViewModel;
 
 namespace Warehouse
 {
     /// <summary>
-    /// Interaction logic for AddProductWindow.xaml
+    /// Add Product Window.
     /// </summary>
     public partial class AddProductWindow : Window
     {
         private ProductsViewModel _productViewModel;
-
+        /// <summary>
+        /// Initializes a new instance of the AddProductWindow class.
+        /// </summary>
+        /// <param name="viewModel">The view model for products.</param>
         public AddProductWindow(ProductsViewModel viewModel)
         {
             InitializeComponent();
             _productViewModel = viewModel;
         }
-
+        /// <summary>
+        /// Event handler for the add button click event.
+        /// Adds a new product based on the provided input and updates the products collection in a view model.
+        /// Closes the window after adding the product.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event arguments.</param>
         private void ButtonAdd_Click(object sender, RoutedEventArgs e)
         {
             string name = txtName.Text;
@@ -40,7 +37,7 @@ namespace Warehouse
                 SKU = sku,
             };
             _productViewModel.InsertProduct(newProduct);
-            _productViewModel.GetProductsByState(ProductStates.OnReceiption);
+            _productViewModel.GetProductsByState(ProductStates.OnAcceptance);
 
             this.Close();
         }

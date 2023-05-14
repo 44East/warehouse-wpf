@@ -1,27 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using Warehouse.Model.Models;
 using Warehouse.ViewModel;
 
 namespace Warehouse
 {
     /// <summary>
-    /// Interaction logic for SoldProductsWindow.xaml
+    /// Represents the window for displaying sold products.
     /// </summary>
     public partial class SoldProductsWindow : Window
     {
         private ProductsViewModel _productViewModel;
+        /// <summary>
+        /// Initializes a new instance of the SoldProductsWindow class.
+        /// </summary>
+        /// <param name="productViewModel">The view model containing products data.</param>
         public SoldProductsWindow(ProductsViewModel productViewModel)
         {
             InitializeComponent();

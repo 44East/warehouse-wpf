@@ -1,27 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using Warehouse.Model.Models;
 using Warehouse.ViewModel;
 
 namespace Warehouse
 {
     /// <summary>
-    /// Interaction logic for OnWarehouseWindow.xaml
+    /// Represents the warehouse window for products.
     /// </summary>
     public partial class OnWarehouseWindow : Window
     {
         private ProductsViewModel _productViewModel;
+        /// <summary>
+        /// Initializes a new instance of the OnWarehouseWindow class.
+        /// </summary>
+        /// <param name="viewModel">The view model containing products data.</param>
         public OnWarehouseWindow(ProductsViewModel viewModel)
         {
             InitializeComponent();
@@ -29,6 +21,12 @@ namespace Warehouse
             _productViewModel.GetProductsByState(ProductStates.OnStorage);
             DataContext = _productViewModel;
         }
+        /// <summary>
+        /// Event handler for the ContextMenuButton click event.
+        /// Updates the selected product's <see cref="State"/> to "Sold" and refreshes the products list.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event arguments.</param>
         private void ContextMenuButton_Click(object sender, RoutedEventArgs e)
         {
             if (_productViewModel.SelectedProduct != null)

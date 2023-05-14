@@ -17,7 +17,7 @@
             </Grid.RowDefinitions>
 
             <ToolBar>
-                <Button Content="Приемка" Click="ButtonReception_Click"/>
+                <Button Content="Приемка" Click="ButtonAcceptance_Click"/>
                 <Button Content="Склад" Click="ButtonWarehouse_Click"/>
                 <Button Content="Реализовано" Click="ButtonSold_Click"/>
                 <Button Content="Отчет" Click="ButtonReport_Click"/>
