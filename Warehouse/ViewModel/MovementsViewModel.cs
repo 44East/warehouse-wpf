@@ -82,6 +82,7 @@ namespace Warehouse.ViewModel
             get => _selectedFromDate;
             set
             {
+                //It sets the time format to 23:59:59 to include the whole day
                 _selectedFromDate = value.Value.AddHours(23).AddMinutes(59).AddSeconds(59);
                 OnPropertyChanged();
             }
